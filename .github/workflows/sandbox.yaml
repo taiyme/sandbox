@@ -1,0 +1,23 @@
+name: Sandbox
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        type: string
+
+jobs:
+  echo:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: |
+          echo "rng="$(openssl rand -hex 8)"" >> $GITHUB_ENV
+
+      - run: |
+          echo "$rng"
+
+      - run: |
+          echo "${{ env.rng }}"
+
+      - run: |
+          echo "${{ inputs.message }}"

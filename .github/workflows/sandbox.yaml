@@ -2,29 +2,23 @@ name: Sandbox
 
 on:
   workflow_dispatch:
-    inputs:
-      message:
-        type: string
 
 jobs:
   echo:
     runs-on: ubuntu-22.04
     steps:
       - run: |
-          echo "rng="$(openssl rand -hex 8)"" >> $GITHUB_ENV
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "multi-message<<${delimiter}"
+            echo "message 1"
+            echo "message 2"
+            echo "message 3"
+            echo $delimiter
+          } >> $GITHUB_ENV
 
       - run: |
-          echo "$rng"
+          echo "$multi-message"
 
       - run: |
-          echo "${{ env.rng }}"
-
-      - run: |
-          echo "$message"
-        env:
-          message: ${{ inputs.message }}
-
-      - run: |
-          echo "${{ env.message }}"
-        env:
-          message: ${{ inputs.message }}
+          echo "${{ env.multi-message }}"

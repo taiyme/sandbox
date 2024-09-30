@@ -20,4 +20,11 @@ jobs:
           echo "${{ env.rng }}"
 
       - run: |
-          echo "${{ inputs.message }}"
+          echo "$message"
+        env:
+          message: ${{ inputs.message }}
+
+      - run: |
+          echo "${{ env.message }}"
+        env:
+          message: ${{ inputs.message }}

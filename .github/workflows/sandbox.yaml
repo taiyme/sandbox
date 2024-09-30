@@ -2,20 +2,47 @@ name: Sandbox
 
 on:
   workflow_dispatch:
+    inputs:
+      message_1:
+        type: string
+      message_2:
+        type: string
+      message_3:
+        type: string
 
 jobs:
-  echo:
+  echo_from_env:
     runs-on: ubuntu-22.04
+    continue-on-error: true
     steps:
       - run: |
           delimiter="$(openssl rand -hex 8)"
           {
             echo "multi_message<<${delimiter}"
-            echo "message 1"
-            echo "message 2"
-            echo "message 3"
+            echo "$message_1"
+            echo "$message_2"
+            echo "$message_3"
             echo $delimiter
           } >> $GITHUB_ENV
+        env:
+          message_1: ${{ inputs.message_1 }}
+          message_2: ${{ inputs.message_2 }}
+          message_3: ${{ inputs.message_3 }}
 
+  echo_from_mustache:
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
       - run: |
-          head -n1 <<< "$multi_message"
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "multi_message<<${delimiter}"
+            echo "${{ env.message_1 }}"
+            echo "${{ env.message_2 }}"
+            echo "${{ env.message_3 }}"
+            echo $delimiter
+          } >> $GITHUB_ENV
+        env:
+          message_1: ${{ inputs.message_1 }}
+          message_2: ${{ inputs.message_2 }}
+          message_3: ${{ inputs.message_3 }}

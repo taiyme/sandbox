@@ -18,7 +18,4 @@ jobs:
           } >> $GITHUB_ENV
 
       - run: |
-          echo "${multi_message}"
-
-      - run: |
-          echo "${{ env.multi_message }}"
+          head -n1 <<< "$multi_message"

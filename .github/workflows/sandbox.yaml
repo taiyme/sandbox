@@ -29,6 +29,9 @@ jobs:
           message_2: ${{ inputs.message_2 }}
           message_3: ${{ inputs.message_3 }}
 
+      - run: |
+          echo "$multi_message" >> $GITHUB_STEP_SUMMARY
+
   echo_from_mustache:
     runs-on: ubuntu-22.04
     continue-on-error: true
@@ -46,3 +49,6 @@ jobs:
           message_1: ${{ inputs.message_1 }}
           message_2: ${{ inputs.message_2 }}
           message_3: ${{ inputs.message_3 }}
+
+      - run: |
+          echo "$multi_message" >> $GITHUB_STEP_SUMMARY

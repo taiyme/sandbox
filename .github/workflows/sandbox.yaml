@@ -10,7 +10,7 @@ jobs:
       - run: |
           delimiter="$(openssl rand -hex 8)"
           {
-            echo "multi-message<<${delimiter}"
+            echo "multi_message<<${delimiter}"
             echo "message 1"
             echo "message 2"
             echo "message 3"
@@ -18,7 +18,7 @@ jobs:
           } >> $GITHUB_ENV
 
       - run: |
-          echo "${multi-message}"
+          echo "${multi_message}"
 
       - run: |
-          echo "${{ env.multi-message }}"
+          echo "${{ env.multi_message }}"

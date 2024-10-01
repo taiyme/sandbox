@@ -55,3 +55,12 @@ jobs:
           echo "$needs_json"
         env:
           needs_json: ${{ toJSON(needs) }}
+
+      - run: |
+          echo 'needs.*.result'
+          echo "$needs_result"
+        env:
+          needs_result: ${{ toJSON(needs.*.result) }}
+
+      - if: contains(needs.*.result, 'failure')
+        run: exit 1

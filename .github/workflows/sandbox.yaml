@@ -82,5 +82,12 @@ jobs:
         env:
           needs_result: ${{ toJSON(needs.*.result) }}
 
-      - if: contains(needs.*.result, 'failure')
-        run: exit 1
+      - run: |
+          results="$(jq -r '.[]' <<< "$needs_result")"
+          echo "$results" | while read -r line; do
+            if [[ "$line" != "success" ]]; then
+              exit 1
+            fi
+          done
+        env:
+          needs_result: ${{ toJSON(needs.*.result) }}

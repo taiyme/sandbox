@@ -36,7 +36,7 @@ jobs:
           echo 'echo matrix_json'
           echo "$matrix_json"
         env:
-          matrix_json: ${{ toJson(matrix) }}
+          matrix_json: ${{ toJSON(matrix) }}
 
       - if: matrix.message_1 == 'foo' && matrix.message_2 == 'fuga'
         run: exit 1
@@ -49,3 +49,9 @@ jobs:
     steps:
       - run: |
           echo 'finally_job'
+
+      - run: |
+          echo 'echo needs_json'
+          echo "$needs_json"
+        env:
+          needs_json: ${{ toJSON(needs) }}

@@ -41,11 +41,31 @@ jobs:
       - if: matrix.message_1 == 'foo' && matrix.message_2 == 'fuga'
         run: exit 1
 
+  try_job2:
+    runs-on: ubuntu-22.04
+    if: success()
+    needs:
+      - try_job
+    steps:
+      - run: |
+          echo 'try_job2'
+
+  try_job3:
+    runs-on: ubuntu-22.04
+    if: failure()
+    needs:
+      - try_job
+    steps:
+      - run: |
+          echo 'try_job2'
+
   finally_job:
     runs-on: ubuntu-22.04
     if: always()
     needs:
       - try_job
+      - try_job2
+      - try_job3
     steps:
       - run: |
           echo 'finally_job'

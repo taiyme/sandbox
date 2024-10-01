@@ -38,12 +38,12 @@ jobs:
         env:
           matrix_json: ${{ toJSON(matrix) }}
 
-      - if: matrix.message_1 == 'foo' && matrix.message_2 == 'fuga'
-        run: exit 1
+      # - if: matrix.message_1 == 'foo' && matrix.message_2 == 'fuga'
+      #   run: exit 1
 
   try_job2:
     runs-on: ubuntu-22.04
-    if: success()
+    # if: success()
     needs:
       - try_job
     steps:
@@ -52,7 +52,7 @@ jobs:
 
   try_job3:
     runs-on: ubuntu-22.04
-    if: failure()
+    # if: failure()
     needs:
       - try_job
     steps:

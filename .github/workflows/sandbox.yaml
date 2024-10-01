@@ -11,44 +11,46 @@ on:
         type: string
 
 jobs:
-  echo_from_env:
+  try_job:
     runs-on: ubuntu-22.04
-    continue-on-error: true
+    strategy:
+      matrix:
+        message_1:
+          - foo
+          - bar
+        message_2:
+          - hoge
+          - fuga
     steps:
       - run: |
-          delimiter="$(openssl rand -hex 8)"
-          {
-            echo "multi_message<<${delimiter}"
-            echo "$message_1"
-            echo "$message_2"
-            echo "$message_3"
-            echo $delimiter
-          } >> $GITHUB_ENV
-        env:
-          message_1: ${{ inputs.message_1 }}
-          message_2: ${{ inputs.message_2 }}
-          message_3: ${{ inputs.message_3 }}
+          echo 'try_job'
 
       - run: |
-          echo "$multi_message" >> $GITHUB_STEP_SUMMARY
+          echo 'echo msg:'
+          echo "$msg"
+        env:
+          msg: ${{ matrix.message_1 }}-${{ matrix.message_2 }}
 
-  echo_from_mustache:
+      - run: |
+          echo 'echo matrix_json'
+          echo "$matrix_json"
+        env:
+          matrix_json: ${{ toJson(matrix) }}
+
+      - run: |
+          echo 'echo matrix_str'
+          echo "$matrix_str"
+        env:
+          matrix_str: ${{ fromJson(matrix) }}
+
+      - if: matrix.message_1 == 'foo' && matrix.message_2 == 'fuga'
+        run: exit 1
+
+  finally_job:
     runs-on: ubuntu-22.04
-    continue-on-error: true
+    if: always()
+    needs:
+      - try_job
     steps:
       - run: |
-          delimiter="$(openssl rand -hex 8)"
-          {
-            echo "multi_message<<${delimiter}"
-            echo "${{ env.message_1 }}"
-            echo "${{ env.message_2 }}"
-            echo "${{ env.message_3 }}"
-            echo $delimiter
-          } >> $GITHUB_ENV
-        env:
-          message_1: ${{ inputs.message_1 }}
-          message_2: ${{ inputs.message_2 }}
-          message_3: ${{ inputs.message_3 }}
-
-      - run: |
-          echo "$multi_message" >> $GITHUB_STEP_SUMMARY
+          echo 'finally_job'

@@ -1,0 +1,44 @@
+name: Sandbox CI#1
+
+on:
+  pull_request:
+
+jobs:
+  sandbox-job:
+    name: sandbox-job in ci#1
+    runs-on: ubuntu-22.04
+    steps:
+      - run: |
+          {
+            echo '```json'
+            echo "$github_json"
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
+        env:
+          github_json: ${{ toJSON(github) }}
+
+      - uses: actions/checkout@v4.2.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - run: |
+          {
+            echo '```txt'
+            git branch -a
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
+
+      - run: |
+          {
+            echo '```txt'
+            git log -n1
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
+
+      - run: |
+          {
+            echo '```txt'
+            cat sandbox.txt || true
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY

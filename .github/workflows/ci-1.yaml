@@ -1,6 +1,9 @@
 name: Sandbox CI#1
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -9,13 +12,26 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       commit: ${{ steps.checkout.outputs.commit }}
-      ref: ${{ steps.checkout.outputs.ref }}
     steps:
+      - name: Prepare
+        id: prepare
+        env:
+          event_name: ${{ github.event_name }}
+          pr_number: ${{ github.event.pull_request.number }}
+          default_ref: ${{ github.ref }}
+        run: |
+          if [[ "$event_name" == 'pull_request_target' ]]; then
+            echo "ref=refs/pull/${pr_number}/merge" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${default_ref}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4.2.0
         with:
           persist-credentials: false
+          ref: ${{ steps.prepare.outputs.ref }}
           fetch-depth: 1
 
       - run: |

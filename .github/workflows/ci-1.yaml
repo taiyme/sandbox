@@ -7,14 +7,14 @@ on:
   pull_request:
 
 jobs:
-  checkout:
-    uses: ./.github/workflows/checkout.yaml
+  pre-checkout:
+    uses: ./.github/workflows/pre-checkout.yaml
 
   sandbox-job:
     name: sandbox-job in ci#1
     runs-on: ubuntu-22.04
     needs:
-      - checkout
+      - pre-checkout
     steps:
       - run: |
           {
@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4.2.0
         with:
           persist-credentials: false
-          ref: ${{ needs.checkout.outputs.sha }}
+          ref: ${{ needs.pre-checkout.outputs.sha }}
           fetch-depth: 0
 
       - run: |

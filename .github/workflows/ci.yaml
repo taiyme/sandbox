@@ -6,6 +6,9 @@ on:
       - main
   pull_request_target:
 
+permissions:
+  contents: read
+
 jobs:
   pre-checkout:
     name: Pre checkout
@@ -15,6 +18,8 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - pre-checkout
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4.2.0
         with:
@@ -25,7 +30,7 @@ jobs:
       - uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          header: check-locale-type
+          header: message-ihatov
           message: |
             ### ${{ github.workflow }}
 
@@ -36,3 +41,12 @@ jobs:
             ```sh
             pnpm lint:fix
             ```
+
+      - run: sleep 30
+
+      - uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          header: message-ihatov
+          hide: true
+          hide_classify: RESOLVED

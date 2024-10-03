@@ -1,0 +1,38 @@
+name: Sandbox CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request_target:
+
+jobs:
+  pre-checkout:
+    name: Pre checkout
+    uses: ./.github/workflows/pre-checkout.yaml
+
+  sandbox-job:
+    runs-on: ubuntu-22.04
+    needs:
+      - pre-checkout
+    steps:
+      - uses: actions/checkout@v4.2.0
+        with:
+          persist-credentials: false
+          ref: ${{ needs.pre-checkout.outputs.sha }}
+          fetch-depth: 0
+
+      - uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31 # v2.9.0
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          header: check-locale-type
+          message: |
+            ### ${{ github.workflow }}
+
+            あのイーハトーヴォのすきとおった風\
+            あのイーハトーヴォのすきとおった風\
+            あのイーハトーヴォのすきとおった風
+
+            ```sh
+            pnpm lint:fix
+            ```

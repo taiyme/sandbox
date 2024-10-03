@@ -11,7 +11,7 @@ jobs:
     name: Checkout
     runs-on: ubuntu-22.04
     outputs:
-      commit: ${{ steps.checkout.outputs.commit }}
+      sha: ${{ steps.checkout.outputs.commit }}
     steps:
       - name: Prepare
         id: prepare
@@ -46,8 +46,8 @@ jobs:
   sandbox-job:
     name: sandbox-job in ci#2
     runs-on: ubuntu-22.04
-    # needs:
-    #   - checkout
+    needs:
+      - checkout
     steps:
       - run: |
           {
@@ -58,29 +58,29 @@ jobs:
         env:
           github_json: ${{ toJSON(github) }}
 
-      # - uses: actions/checkout@v4.2.0
-      #   with:
-      #     persist-credentials: false
-      #     ref: refs/pull/${{ github.event.pull_request.number }}/merge
-      #     fetch-depth: 0
+      - uses: actions/checkout@v4.2.0
+        with:
+          persist-credentials: false
+          ref: ${{ needs.checkout.outputs.sha }}
+          fetch-depth: 0
 
-      # - run: |
-      #     {
-      #       echo '```txt'
-      #       git branch -a
-      #       echo '```'
-      #     } >> $GITHUB_STEP_SUMMARY
+      - run: |
+          {
+            echo '```txt'
+            git branch -a
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
 
-      # - run: |
-      #     {
-      #       echo '```txt'
-      #       git log -n1
-      #       echo '```'
-      #     } >> $GITHUB_STEP_SUMMARY
+      - run: |
+          {
+            echo '```txt'
+            git log -n1
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
 
-      # - run: |
-      #     {
-      #       echo '```txt'
-      #       cat sandbox.txt || true
-      #       echo '```'
-      #     } >> $GITHUB_STEP_SUMMARY
+      - run: |
+          {
+            echo '```txt'
+            cat sandbox.txt || true
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY

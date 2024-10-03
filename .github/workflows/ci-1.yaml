@@ -8,6 +8,7 @@ on:
 
 jobs:
   pre-checkout:
+    name: Pre checkout
     uses: ./.github/workflows/pre-checkout.yaml
 
   sandbox-job:

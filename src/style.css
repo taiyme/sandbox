@@ -13,8 +13,9 @@ body {
   height: 100px;
   margin: 16px 0;
   border: 1px solid #ddd;
+  background-color: rgb(211 211 211 / 0.2);
 
-  --c: rgba(0 0 0 / 0.02);
+  --c: rgb(0 0 0 / 0.02);
 
   &.repeating-linear-gradient {
     background-image: repeating-linear-gradient(

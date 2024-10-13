@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-to-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      # - name: Enable corepack
+      #   run: |
+      #     corepack enable
+
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v4.0.4
+      #   with:
+      #     node-version-file: .node-version
+      #     cache: pnpm
+
+      # - name: Build
+      #   run: |
+      #     pnpm install --frozen-lockfile
+
+      - name: Upload artifacts
+        uses: actions/upload-pages-artifact@v3.0.1
+        with:
+          path: ${{ github.workspace }}/src
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-22.04
+    permissions:
+      pages: write
+      id-token: write
+    needs:
+      - build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4.0.5

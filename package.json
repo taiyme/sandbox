@@ -1,0 +1,16 @@
+{
+  "name": "@taiyme/sandbox",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "homepage": "https://github.com/taiyme/sandbox",
+  "bugs": "https://github.com/taiyme/sandbox/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/taiyme/sandbox.git"
+  },
+  "license": "MIT",
+  "author": "taiy <me@taiy.me> (https://taiy.me/)",
+  "type": "module",
+  "packageManager": "pnpm@10.2.0"
+}

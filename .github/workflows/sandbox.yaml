@@ -1,0 +1,95 @@
+name: Sandbox
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request_target:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  echo-env:
+    name: echo env
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo "ref: ${{ github.ref }}"
+          echo "sha: ${{ github.sha }}"
+
+      - run: |
+          echo "base_ref: ${{ github.base_ref }}"
+          echo "PR.base.ref: ${{ github.event.pull_request.base.ref }}"
+          echo "PR.base.sha: ${{ github.event.pull_request.base.sha }}"
+
+      - run: |
+          echo "head_ref: ${{ github.head_ref }}"
+          echo "PR.head.ref: ${{ github.event.pull_request.head.ref }}"
+          echo "PR.head.sha: ${{ github.event.pull_request.head.sha }}"
+
+      - run: |
+          echo "PR.merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}"
+          echo "PR.mergeable: ${{ github.event.pull_request.mergeable }}"
+          echo "PR.mergeable_state: ${{ github.event.pull_request.mergeable_state }}"
+
+  checkout-default:
+    name: Checkout (default)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - run: |
+          echo "input_ref: (none)"
+          echo "ref: ${{ steps.checkout.outputs.ref }}"
+          echo "sha: ${{ steps.checkout.outputs.commit }}"
+
+  checkout-merge_commit_sha:
+    name: Checkout (merge_commit_sha)
+    runs-on: ubuntu-24.04
+    env:
+      input_ref: ${{ github.event.pull_request.merge_commit_sha }}
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          ref: ${{ env.input_ref }}
+
+      - run: |
+          echo "input_ref: ${{ env.input_ref }}"
+          echo "ref: ${{ steps.checkout.outputs.ref }}"
+          echo "sha: ${{ steps.checkout.outputs.commit }}"
+
+  checkout-refs_pull_merge:
+    name: Checkout (refs/pull/pr_number/merge)
+    runs-on: ubuntu-24.04
+    env:
+      input_ref: refs/pull/${{ github.event.number }}/merge
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          ref: ${{ env.input_ref }}
+
+      - run: |
+          echo "input_ref: ${{ env.input_ref }}"
+          echo "ref: ${{ steps.checkout.outputs.ref }}"
+          echo "sha: ${{ steps.checkout.outputs.commit }}"

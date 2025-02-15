@@ -10,7 +10,7 @@ jobs:
     name: Prepare
     runs-on: ubuntu-22.04
     outputs:
-      items: ${{ toJSON('["__shared__","backend","frontend"]') }}
+      items: '["__shared__","backend","frontend"]'
     steps:
       - run: echo 0
 

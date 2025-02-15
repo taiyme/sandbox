@@ -23,5 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         item: ${{ fromJSON(needs.prepare.outputs.items) }}
+        exclude:
+          - item: __shared__
     steps:
       - run: echo '${{ matrix.item }}'

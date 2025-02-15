@@ -26,4 +26,4 @@ jobs:
         exclude:
           - item: __shared__
     steps:
-      - run: echo '${{ matrix.item }}'
+      - run: echo '${{ toJSON(matrix) }}'

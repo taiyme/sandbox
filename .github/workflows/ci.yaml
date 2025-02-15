@@ -6,10 +6,22 @@ on:
 permissions: {}
 
 jobs:
-  random-failure:
-    name: Random failure
+  prepare:
+    name: Prepare
     runs-on: ubuntu-22.04
+    outputs:
+      items: ${{ toJSON('["__shared__","backend","frontend"]') }}
     steps:
-      - name: Random failure
-        run: |
-          exit $((RANDOM % 2))
+      - run: echo 0
+
+  matrix-job:
+    name: Matrix job
+    runs-on: ubuntu-22.04
+    needs:
+      - prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        item: ${{ fromJSON(needs.prepare.outputs.items) }}
+    steps:
+      - run: echo '${{ matrix.item }}'

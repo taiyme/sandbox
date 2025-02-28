@@ -6,24 +6,17 @@ on:
 permissions: {}
 
 jobs:
-  prepare:
-    name: Prepare
-    runs-on: ubuntu-22.04
-    outputs:
-      items: '["__shared__"]'
-    steps:
-      - run: echo 0
-
-  matrix-job:
-    name: Matrix job
-    runs-on: ubuntu-22.04
-    needs:
-      - prepare
+  job:
+    name: Job
+    runs-on: ${{ matrix.value.os }}
     strategy:
-      fail-fast: false
       matrix:
-        item: ${{ fromJSON(needs.prepare.outputs.items) }}
-        exclude:
-          - item: __shared__
+        value:
+          - os: ubuntu-22.04
+            platform: linux/amd64
+          - os: ubuntu-22.04-arm
+            platform: linux/arm64
     steps:
-      - run: echo '${{ toJSON(matrix) }}'
+      - name: Step
+        run: |
+          echo "${{ fromJSON(matrix) }}"

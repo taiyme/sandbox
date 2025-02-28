@@ -17,6 +17,6 @@ jobs:
           - os: ubuntu-22.04-arm
             platform: linux/arm64
     steps:
-      - name: Step
-        run: |
-          echo '${{ fromJSON(matrix) }}'
+      - run: echo ${{ matrix.value.os }}
+
+      - run: echo ${{ matrix.value.platform }}

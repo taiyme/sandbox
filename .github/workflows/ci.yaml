@@ -19,4 +19,4 @@ jobs:
     steps:
       - name: Step
         run: |
-          echo "${{ fromJSON(matrix) }}"
+          echo '${{ fromJSON(matrix) }}'

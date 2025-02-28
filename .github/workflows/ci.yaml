@@ -10,6 +10,7 @@ jobs:
     name: Job
     runs-on: ${{ matrix.value.os }}
     strategy:
+      fail-fast: false
       matrix:
         value:
           - os: ubuntu-22.04

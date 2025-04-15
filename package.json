@@ -12,5 +12,9 @@
   "license": "MIT",
   "author": "taiy <me@taiy.me> (https://taiy.me/)",
   "type": "module",
-  "packageManager": "pnpm@10.5.2"
+  "packageManager": "pnpm@10.8.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.6.0"
+  }
 }

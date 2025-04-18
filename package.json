@@ -18,12 +18,12 @@
     "typescript-eslint": "8.30.0"
   },
   "devDependencies": {
-    "@types/node": "22.14.0",
+    "@types/node": "22.14.1",
     "@typescript-eslint/parser": "8.30.0",
     "better-typescript-lib": "2.10.0",
     "typescript": "5.8.2"
   },
-  "packageManager": "pnpm@10.8.0",
+  "packageManager": "pnpm@10.8.1",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.6.0"

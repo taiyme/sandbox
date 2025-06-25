@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "enabled": true,
+  "enabled": false,
   "extends": [
     "config:best-practices",
     "schedule:weekly",
@@ -34,9 +34,6 @@
       "groupName": "runtime dependencies",
       "groupSlug": "runtime-deps",
       "matchDepNames": ["node", "@types/node", "pnpm", "npm:pnpm"]
-    },
-    {
-      "matchDepNames": ["typescript-eslint", "@eslint/js"]
     }
   ],
   "lockFileMaintenance": {

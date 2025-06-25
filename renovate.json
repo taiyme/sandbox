@@ -36,7 +36,6 @@
       "matchDepNames": ["node", "@types/node", "pnpm", "npm:pnpm"]
     },
     {
-      "groupName": null,
       "matchDepNames": ["typescript-eslint", "@eslint/js"]
     }
   ],

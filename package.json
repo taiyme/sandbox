@@ -1,6 +1,6 @@
 {
   "name": "@taiyme/sandbox",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "",
   "homepage": "https://github.com/taiyme/sandbox",
@@ -12,8 +12,7 @@
   "license": "MIT",
   "author": "taiy <me@taiy.me> (https://taiy.me/)",
   "type": "module",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "22.15.29",
     "better-typescript-lib": "2.11.0",

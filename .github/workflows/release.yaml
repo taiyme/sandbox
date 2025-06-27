@@ -1,5 +1,5 @@
-name: Create Release PR
-run-name: Create Release PR (bump to ${{ inputs.bump_type }} version)
+name: Release
+run-name: Release (bump to ${{ inputs.bump_type }} version)
 
 on:
   workflow_dispatch:
@@ -28,6 +28,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       version: ${{ steps.generate.outputs.new_version }}
+      tag: v${{ steps.generate.outputs.new_version }}
       branch: releases/v${{ steps.generate.outputs.new_version }}
       message: "chore(release): bump to v${{ steps.generate.outputs.new_version }}"
     steps:
@@ -44,9 +45,11 @@ jobs:
           bump_type: ${{ inputs.bump_type }}
         run: |
           version="$(cat package.json | jq -r '.version')"
+
           major="$(cut -d. -f1 <<< "$version")"
           minor="$(cut -d. -f2 <<< "$version")"
           patch="$(cut -d. -f3 <<< "$version")"
+
           if [[ "$bump_type" == 'major' ]]; then
             new_version="$((major + 1)).0.0"
           elif [[ "$bump_type" == 'minor' ]]; then
@@ -54,9 +57,11 @@ jobs:
           elif [[ "$bump_type" == 'patch' ]]; then
             new_version="${major}.${minor}.$((patch + 1))"
           fi
+
           if [[ -z "$new_version" ]]; then
             exit 1
           fi
+
           echo "new_version=${new_version}" >> $GITHUB_OUTPUT
 
   bump-version:
@@ -144,3 +149,116 @@ jobs:
             --head ${{ needs.parse-version.outputs.branch }} \
             --title '${{ needs.parse-version.outputs.message }}' \
             --body ''
+
+  merge-pr:
+    name: Merge PR
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    needs:
+      - parse-version
+      - create-pr
+    outputs:
+      merge-commit: ${{ steps.get-merge-commit.outputs.merge-commit }}
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        id: app-token
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Get PR number
+        id: get-pr-number
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          pr_branch: ${{ needs.parse-version.outputs.branch }}
+        run: |
+          pr_number="$(gh pr list --head $pr_branch --json number --template '{{ (index . 0).number }}')"
+          echo "pr-number=${pr_number}" >> $GITHUB_OUTPUT
+
+      - name: Merge PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          pr_number: ${{ steps.get-pr-number.outputs.pr-number }}
+        run: |
+          gh pr checks $pr_number --watch
+          gh pr ready $pr_number
+          gh pr merge $pr_number --squash --delete-branch --auto
+
+      - name: Get merge commit
+        id: get-merge-commit
+        env:
+          pr_number: ${{ steps.get-pr-number.outputs.pr-number }}
+        run: |
+          interval=10
+          max_retries=60
+
+          for ((i=1; i<=max_retries; i++)); do
+            merge_commit=$(gh pr view $pr_number --json mergeCommit --template '{{ .mergeCommit.oid }}' 2>/dev/null)
+
+            if [[ -n "$merge_commit" && "$merge_commit" != "null" ]]; then
+              echo "merge-commit=${merge_commit}" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+
+            sleep "$interval"
+          done
+
+          exit 1
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    needs:
+      - parse-version
+      - merge-pr
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        id: app-token
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          user_id="$(gh api '/users/${{ steps.app-token.outputs.app-slug }}[bot]' --jq '.id')"
+          echo "user-id=${user_id}" >> $GITHUB_OUTPUT
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+          ref: ${{ needs.merge-pr.outputs.merge-commit }}
+          fetch-depth: 0
+
+      - name: Create tag
+        run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+          git remote set-url origin 'https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/${{ github.repository }}'
+          git tag ${{ needs.parse-version.outputs.tag }} ${{ needs.merge-pr.outputs.merge-commit }}
+          git push origin ${{ needs.parse-version.outputs.tag }}
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh release create ${{ needs.parse-version.outputs.tag }} --generate-notes

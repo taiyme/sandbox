@@ -188,7 +188,10 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           pr_number: ${{ steps.get-pr-number.outputs.pr-number }}
         run: |
-          gh pr checks $pr_number --watch
+          checks="$(gh pr view $pr_number --json statusCheckRollup --template '{{ .statusCheckRollup }}')"
+          if [[ "$checks" != '[]' ]]; then
+            gh pr checks $pr_number --watch
+          fi
           gh pr ready $pr_number
           gh pr merge $pr_number --squash --delete-branch --auto
 

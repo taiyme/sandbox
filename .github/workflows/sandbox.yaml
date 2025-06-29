@@ -22,23 +22,33 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - run: |
+          echo "[event]"
+          echo "event_name: ${{ github.event_name }}"
+          echo "event.number: ${{ github.event.number }}"
+          echo ""
+
+          echo "[basic]"
           echo "ref: ${{ github.ref }}"
           echo "sha: ${{ github.sha }}"
+          echo ""
 
-      - run: |
+          echo "[base]"
           echo "base_ref: ${{ github.base_ref }}"
           echo "PR.base.ref: ${{ github.event.pull_request.base.ref }}"
           echo "PR.base.sha: ${{ github.event.pull_request.base.sha }}"
+          echo ""
 
-      - run: |
+          echo "[head]"
           echo "head_ref: ${{ github.head_ref }}"
           echo "PR.head.ref: ${{ github.event.pull_request.head.ref }}"
           echo "PR.head.sha: ${{ github.event.pull_request.head.sha }}"
+          echo ""
 
-      - run: |
+          echo "[merge]"
           echo "PR.merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}"
           echo "PR.mergeable: ${{ github.event.pull_request.mergeable }}"
           echo "PR.mergeable_state: ${{ github.event.pull_request.mergeable_state }}"
+          echo ""
 
   checkout-default:
     name: Checkout (default)

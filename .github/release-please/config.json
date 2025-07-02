@@ -3,6 +3,7 @@
   "release-type": "node",
   "pull-request-title-pattern": "chore(release): bump to v${version}",
   "include-component-in-tag": false,
+  "include-v-in-tag": true,
   "packages": {
     ".": {}
   }

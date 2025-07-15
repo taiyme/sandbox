@@ -12,7 +12,6 @@ jobs:
     name: CI 2
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    if: false
     steps:
       - run: sleep 60
       - run: exit 0

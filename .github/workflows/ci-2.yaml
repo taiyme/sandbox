@@ -1,0 +1,17 @@
+name: CI 2
+
+on:
+  pull_request_target:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  ci-2:
+    name: CI 2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - run: sleep 20
+      - run: exit 0

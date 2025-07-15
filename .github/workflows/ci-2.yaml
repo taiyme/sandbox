@@ -14,5 +14,5 @@ jobs:
     timeout-minutes: 10
     if: false
     steps:
-      - run: sleep 20
+      - run: sleep 60
       - run: exit 0

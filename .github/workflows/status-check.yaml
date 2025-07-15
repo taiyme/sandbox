@@ -21,3 +21,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           self: Status Check
+          timeout: 60

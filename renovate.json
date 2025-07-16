@@ -4,10 +4,75 @@
   "extends": [
     "local>taiyme/sandbox//presets/baseRecommended",
     "local>taiyme/sandbox//presets/baseSchedule",
-    "local>taiyme/sandbox//presets/baseAutomerge",
-    "local>taiyme/sandbox//presets/groupCI",
-    "local>taiyme/sandbox//presets/groupNpm",
-    "local>taiyme/sandbox//presets/groupRuntime",
-    "local>taiyme/sandbox//presets/groupUnstable"
+    "local>taiyme/sandbox//presets/baseAutomerge"
+  ],
+  "packageRules": [
+    {
+      "matchCategories": ["ci"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "CI dependencies (non-major)"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["peerDependencies", "engines", "overrides", "resolutions", "pnpm.*"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm development dependencies (non-major)"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["dependencies", "optionalDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm production dependencies (non-major)"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepNames": ["{npm:,}@taiyme/**"],
+      "groupName": null
+    },
+    {
+      "matchDepNames": ["{npm:,}deno"],
+      "groupName": "deno"
+    },
+    {
+      "matchDepNames": ["{npm:,}{@types/,}bun"],
+      "groupName": "bun"
+    },
+    {
+      "matchDepNames": ["{npm:,}yarn"],
+      "groupName": "yarn"
+    },
+    {
+      "matchDepNames": ["{npm:,}pnpm"],
+      "groupName": "pnpm"
+    },
+    {
+      "matchDepNames": ["{npm:,}npm"],
+      "groupName": "npm"
+    },
+    {
+      "matchDepNames": ["{npm:,}{@types/,}node"],
+      "groupName": "node"
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchDepNames": [
+        "{npm:,}{deno,yarn,pnpm,npm}",
+        "{npm:,}{@types/,}{bun,node}"
+      ],
+      "groupName": "runtime dependencies (non-major)"
+    },
+    {
+      "matchDepNames": ["{npm:,}typescript"],
+      "groupName": "typescript"
+    },
+    {
+      "matchCurrentVersion": "!/^0\\./",
+      "groupName": null
+    }
   ]
 }

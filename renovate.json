@@ -1,9 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "enabled": false,
+  "enabled": true,
   "extends": [
-    "local>taiyme/sandbox//presets/recommended",
-    "local>taiyme/sandbox//presets/schedule",
-    "local>taiyme/sandbox//presets/automerge"
+    "github>taiyme/renovate-config",
+    ":assignAndReview(taiyme)"
   ]
 }

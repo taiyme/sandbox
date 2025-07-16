@@ -5,29 +5,5 @@
     "local>taiyme/sandbox//presets/baseRecommended",
     "local>taiyme/sandbox//presets/baseSchedule",
     "local>taiyme/sandbox//presets/baseAutomerge"
-  ],
-  "packageRules": [
-    {
-      "matchCategories": ["ci"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "CI dependencies (non-major)"
-    },
-    {
-      "matchManagers": ["npm"],
-      "matchDepTypes": ["peerDependencies", "engines", "overrides", "resolutions", "pnpm.*"],
-      "enabled": false
-    },
-    {
-      "matchManagers": ["npm"],
-      "matchDepTypes": ["devDependencies"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "npm development dependencies (non-major)"
-    },
-    {
-      "matchManagers": ["npm"],
-      "matchDepTypes": ["dependencies", "optionalDependencies"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "npm production dependencies (non-major)"
-    }
   ]
 }

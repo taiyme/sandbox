@@ -4,6 +4,7 @@
   "extends": [
     "local>taiyme/sandbox//presets/baseRecommended",
     "local>taiyme/sandbox//presets/baseSchedule",
-    "local>taiyme/sandbox//presets/baseAutomerge"
+    "local>taiyme/sandbox//presets/baseAutomerge",
+    "local>taiyme/sandbox//presets/group"
   ]
 }

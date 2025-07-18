@@ -7,6 +7,7 @@
     "local>taiyme/sandbox//presets/baseAutomerge",
     "local>taiyme/sandbox//presets/groupCI",
     "local>taiyme/sandbox//presets/groupNpmBun",
-    "local>taiyme/sandbox//presets/groupRuntime"
+    "local>taiyme/sandbox//presets/groupRuntime",
+    "local>taiyme/sandbox//presets/groupUnstable"
   ]
 }

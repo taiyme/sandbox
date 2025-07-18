@@ -2,16 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "packageRules": [
     {
-      "matchDepNames": ["{npm:,}deno"],
-      "groupName": "deno"
-    },
-    {
       "matchDepNames": ["{npm:,}{@types/,}bun"],
       "groupName": "bun"
-    },
-    {
-      "matchDepNames": ["{npm:,}yarn"],
-      "groupName": "yarn"
     },
     {
       "matchDepNames": ["{npm:,}pnpm"],
@@ -28,7 +20,7 @@
     {
       "matchUpdateTypes": ["minor", "patch"],
       "matchDepNames": [
-        "{npm:,}{deno,yarn,pnpm,npm}",
+        "{npm:,}{pnpm,npm}",
         "{npm:,}{@types/,}{bun,node}"
       ],
       "groupName": "runtime dependencies (non-major)"

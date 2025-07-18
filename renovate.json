@@ -5,6 +5,8 @@
     "local>taiyme/sandbox//presets/baseRecommended",
     "local>taiyme/sandbox//presets/baseSchedule",
     "local>taiyme/sandbox//presets/baseAutomerge",
-    "local>taiyme/sandbox//presets/group"
+    "local>taiyme/sandbox//presets/groupCI",
+    "local>taiyme/sandbox//presets/groupNpmBun",
+    "local>taiyme/sandbox//presets/groupRuntime"
   ]
 }

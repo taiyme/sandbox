@@ -6,19 +6,14 @@
       "groupName": "CI dependencies (non-major)"
     },
     {
-      "matchManagers": ["npm"],
+      "matchManagers": ["npm", "bun"],
       "matchDepTypes": ["devDependencies"],
-      "groupName": "npm development dependencies (non-major)"
+      "groupName": "{{manager}} development dependencies (non-major)"
     },
     {
-      "matchManagers": ["npm"],
+      "matchManagers": ["npm", "bun"],
       "matchDepTypes": ["dependencies", "optionalDependencies"],
-      "groupName": "npm production dependencies (non-major)"
-    },
-    {
-      "matchManagers": ["npm"],
-      "matchDepNames": ["{npm:,}@taiyme/**"],
-      "groupName": null
+      "groupName": "{{manager}} production dependencies (non-major)"
     }
   ]
 }

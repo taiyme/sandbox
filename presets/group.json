@@ -14,6 +14,34 @@
       "matchManagers": ["npm", "bun"],
       "matchDepTypes": ["dependencies", "optionalDependencies"],
       "groupName": "{{manager}} production dependencies (non-major)"
+    },
+    {
+      "matchDepNames": ["{npm:,}{@types/,}bun"],
+      "groupName": "bun"
+    },
+    {
+      "matchDepNames": ["{npm:,}pnpm"],
+      "groupName": "pnpm"
+    },
+    {
+      "matchDepNames": ["{npm:,}npm"],
+      "groupName": "npm"
+    },
+    {
+      "matchDepNames": ["{npm:,}{@types/,}node"],
+      "groupName": "node"
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchDepNames": [
+        "{npm:,}{pnpm,npm}",
+        "{npm:,}{@types/,}{bun,node}"
+      ],
+      "groupName": "runtime dependencies (non-major)"
+    },
+    {
+      "matchDepNames": ["{npm:,}typescript"],
+      "groupName": "typescript"
     }
   ]
 }

@@ -1,13 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "enabled": true,
-  "extends": [
-    "local>taiyme/sandbox//presets/baseRecommended",
-    "local>taiyme/sandbox//presets/baseSchedule",
-    "local>taiyme/sandbox//presets/baseAutomerge",
-    "local>taiyme/sandbox//presets/groupCI",
-    "local>taiyme/sandbox//presets/groupNpmBun",
-    "local>taiyme/sandbox//presets/groupRuntime",
-    "local>taiyme/sandbox//presets/groupUnstable"
-  ]
+  "enabled": false
 }

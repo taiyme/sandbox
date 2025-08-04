@@ -20,8 +20,8 @@ permissions: {}
   # statuses: read
 
 jobs:
-  validate-pr-title:
-    name: Validate PR title
+  semantic-pr-title:
+    name: Semantic PR title
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -41,7 +41,7 @@ jobs:
       checks: read
       statuses: read
     steps:
-      - name: Watch checks
+      - name: Watch PR checks
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           repo: ${{ github.repository }}

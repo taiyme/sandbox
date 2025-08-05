@@ -73,18 +73,12 @@ jobs:
             echo "${failed_checks_length} failing, ${passed_checks_length} successful, and ${pending_checks_length} pending checks"
 
             if [[ "$failed_checks_length" != "0" ]]; then
-              title="Some checks were not successful"
-              message="${failed_checks_length} failing checks"
-
-              echo "::error title=${title}::${message}"
+              echo "Some checks have failed"
               exit 1
             fi
 
             if [[ "$pending_checks_length" == "0" ]]; then
-              title="All checks have passed"
-              message="${passed_checks_length} successful checks"
-
-              echo "::notice title=${title}::${message}"
+              echo "All checks have been completed"
               exit 0
             fi
 

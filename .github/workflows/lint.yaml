@@ -1,0 +1,155 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request_target:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  pre-checkout:
+    name: Pre checkout
+    uses: ./.github/workflows/pre-checkout.yaml
+    permissions:
+      contents: read
+
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    needs:
+      - pre-checkout
+    env:
+      cache-path: ${{ github.workspace }}/.cache/.eslintcache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ needs.pre-checkout.outputs.sha }}
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Get store-dir
+        id: get-store-dir
+        run: |
+          echo "store-dir=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm
+        id: cache-pnpm
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        env:
+          cache-prefix: pnpm-cache
+          cache-platform: ${{ runner.os }}-${{ runner.arch }}
+          cache-hash: ${{ hashFiles('**/pnpm-lock.yaml') }}
+        with:
+          path: |
+            ${{ steps.get-store-dir.outputs.store-dir }}
+            **/node_modules
+          key: ${{ env.cache-prefix }}-${{ env.cache-platform }}-${{ env.cache-hash }}
+
+      - name: Install dependencies
+        if: ${{ steps.cache-pnpm.outputs.cache-hit != 'true' }}
+        run: |
+          pnpm install --frozen-lockfile
+
+      - name: Cache eslint
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        env:
+          cache-prefix: eslint-cache
+          cache-platform: ${{ runner.os }}-${{ runner.arch }}
+          cache-hash: ${{ hashFiles('**/pnpm-lock.yaml', '**/eslint.config.ts') }}
+        with:
+          path: ${{ env.cache-path }}
+          key: ${{ env.cache-prefix }}-${{ env.cache-platform }}-${{ env.cache-hash }}
+
+      - name: Run eslint
+        run: |
+          pnpm exec eslint \
+            --cache \
+            --cache-location='${{ env.cache-path }}' \
+            --cache-strategy=content
+
+  typecheck:
+    name: TypeCheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    needs:
+      - pre-checkout
+    env:
+      cache-path: ${{ github.workspace }}/.cache/.tsbuildinfo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ needs.pre-checkout.outputs.sha }}
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Get store-dir
+        id: get-store-dir
+        run: |
+          echo "store-dir=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm
+        id: cache-pnpm
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        env:
+          cache-prefix: pnpm-cache
+          cache-platform: ${{ runner.os }}-${{ runner.arch }}
+          cache-hash: ${{ hashFiles('**/pnpm-lock.yaml') }}
+        with:
+          path: |
+            ${{ steps.get-store-dir.outputs.store-dir }}
+            **/node_modules
+          key: ${{ env.cache-prefix }}-${{ env.cache-platform }}-${{ env.cache-hash }}
+
+      - name: Install dependencies
+        if: ${{ steps.cache-pnpm.outputs.cache-hit != 'true' }}
+        run: |
+          pnpm install --frozen-lockfile
+
+      - name: Cache typecheck
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        env:
+          cache-prefix: typecheck-cache
+          cache-platform: ${{ runner.os }}-${{ runner.arch }}
+          cache-hash: ${{ hashFiles('**/pnpm-lock.yaml', '**/tsconfig.json') }}
+        with:
+          path: ${{ env.cache-path }}
+          key: ${{ env.cache-prefix }}-${{ env.cache-platform }}-${{ env.cache-hash }}
+
+      - name: Run typecheck
+        run: |
+          pnpm exec tsc \
+            --noEmit \
+            --incremental \
+            --tsBuildInfoFile='${{ env.cache-path }}'

@@ -85,8 +85,8 @@ jobs:
         run: |
           pnpm exec eslint \
             --cache \
-            --cache-location='${{ env.cache-path }}' \
-            --cache-strategy=content
+            --cache-location '${{ env.cache-path }}' \
+            --cache-strategy content
 
   typecheck:
     name: TypeCheck
@@ -152,4 +152,4 @@ jobs:
           pnpm exec tsc \
             --noEmit \
             --incremental \
-            --tsBuildInfoFile='${{ env.cache-path }}'
+            --tsBuildInfoFile '${{ env.cache-path }}'

@@ -49,7 +49,7 @@ jobs:
           prefix: eslint-cache
           platform: ${{ runner.os }}-${{ runner.arch }}
           hash: ${{ hashFiles('**/pnpm-lock.yaml', '**/eslint.config.ts') }}
-          primary: ${{ github.sha }}
+          primary: ${{ needs.pre-checkout.outputs.sha }}
         with:
           path: ${{ env.cache-path }}
           key: >-
@@ -92,7 +92,7 @@ jobs:
           prefix: typecheck-cache
           platform: ${{ runner.os }}-${{ runner.arch }}
           hash: ${{ hashFiles('**/pnpm-lock.yaml', '**/tsconfig.json') }}
-          primary: ${{ github.sha }}
+          primary: ${{ needs.pre-checkout.outputs.sha }}
         with:
           path: ${{ env.cache-path }}
           key: >-

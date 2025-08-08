@@ -26,15 +26,11 @@ runs:
         prefix: pnpm-cache
         platform: ${{ runner.os }}-${{ runner.arch }}
         hash: ${{ hashFiles('**/pnpm-lock.yaml') }}
-        primary: ${{ github.sha }}
       with:
         path: |
           ${{ steps.get-store-dir.outputs.store-dir }}
           **/node_modules
         key: >-
-          ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}-${{ env.primary }}
-        restore-keys: |
-          ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}-${{ env.primary }}
           ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}
 
     - name: Install dependencies

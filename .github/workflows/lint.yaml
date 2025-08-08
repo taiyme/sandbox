@@ -46,12 +46,17 @@ jobs:
       - name: Cache eslint
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         env:
-          cache-prefix: eslint-cache
-          cache-platform: ${{ runner.os }}-${{ runner.arch }}
-          cache-hash: ${{ hashFiles('**/pnpm-lock.yaml', '**/eslint.config.ts') }}
+          prefix: eslint-cache
+          platform: ${{ runner.os }}-${{ runner.arch }}
+          hash: ${{ hashFiles('**/pnpm-lock.yaml', '**/eslint.config.ts') }}
+          primary: ${{ github.sha }}
         with:
           path: ${{ env.cache-path }}
-          key: ${{ env.cache-prefix }}-${{ env.cache-platform }}-${{ env.cache-hash }}
+          key: >-
+            ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}-${{ env.primary }}
+          restore-keys: |
+            ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}-${{ env.primary }}
+            ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}
 
       - name: Run eslint
         run: |
@@ -84,12 +89,17 @@ jobs:
       - name: Cache typecheck
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         env:
-          cache-prefix: typecheck-cache
-          cache-platform: ${{ runner.os }}-${{ runner.arch }}
-          cache-hash: ${{ hashFiles('**/pnpm-lock.yaml', '**/tsconfig.json') }}
+          prefix: typecheck-cache
+          platform: ${{ runner.os }}-${{ runner.arch }}
+          hash: ${{ hashFiles('**/pnpm-lock.yaml', '**/tsconfig.json') }}
+          primary: ${{ github.sha }}
         with:
           path: ${{ env.cache-path }}
-          key: ${{ env.cache-prefix }}-${{ env.cache-platform }}-${{ env.cache-hash }}
+          key: >-
+            ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}-${{ env.primary }}
+          restore-keys: |
+            ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}-${{ env.primary }}
+            ${{ env.prefix }}-${{ env.platform }}-${{ env.hash }}
 
       - name: Run typecheck
         run: |

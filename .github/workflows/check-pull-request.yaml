@@ -41,13 +41,16 @@ jobs:
       - name: Watch PR checks
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          repo: ${{ github.repository }}
-          pr: ${{ github.event.number }}
+          GH_REPO: ${{ github.repository }}
+          pr_number: ${{ github.event.number }}
         run: |
+          prev_message=""
+
+          echo "::group::PR checks log"
+
           while true; do
             all_checks="$( \
-              gh pr --repo "$repo" \
-                checks "$pr" \
+              gh pr checks "$pr_number" \
                 --json bucket,name \
                 --jq 'map(select(.name != "Status Check"))' \
             )"
@@ -67,14 +70,21 @@ jobs:
                 <<< $all_checks \
             )"
 
-            echo "${failed_checks_length} failing, ${passed_checks_length} successful, and ${pending_checks_length} pending checks"
+            current_message="${failed_checks_length} failing, ${passed_checks_length} successful, and ${pending_checks_length} pending checks"
+
+            if [[ "$current_message" != "$prev_message" ]]; then
+              echo "$current_message"
+              prev_message="$current_message"
+            fi
 
             if [[ "$failed_checks_length" != "0" ]]; then
+              echo "::endgroup::"
               echo "Some checks have failed"
               exit 1
             fi
 
             if [[ "$pending_checks_length" == "0" ]]; then
+              echo "::endgroup::"
               echo "All checks have been completed"
               exit 0
             fi

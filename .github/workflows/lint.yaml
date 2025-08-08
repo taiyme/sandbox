@@ -40,36 +40,8 @@ jobs:
           ref: ${{ needs.pre-checkout.outputs.sha }}
           fetch-depth: 1
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version-file: .node-version
-
-      - name: Get store-dir
-        id: get-store-dir
-        run: |
-          echo "store-dir=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - name: Cache pnpm
-        id: cache-pnpm
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        env:
-          cache-prefix: pnpm-cache
-          cache-platform: ${{ runner.os }}-${{ runner.arch }}
-          cache-hash: ${{ hashFiles('**/pnpm-lock.yaml') }}
-        with:
-          path: |
-            ${{ steps.get-store-dir.outputs.store-dir }}
-            **/node_modules
-          key: ${{ env.cache-prefix }}-${{ env.cache-platform }}-${{ env.cache-hash }}
-
-      - name: Install dependencies
-        if: ${{ steps.cache-pnpm.outputs.cache-hit != 'true' }}
-        run: |
-          pnpm install --frozen-lockfile
+      - name: Setup pnpm and install dependencies
+        uses: ./.github/actions/setup-pnpm
 
       - name: Cache eslint
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -106,36 +78,8 @@ jobs:
           ref: ${{ needs.pre-checkout.outputs.sha }}
           fetch-depth: 1
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version-file: .node-version
-
-      - name: Get store-dir
-        id: get-store-dir
-        run: |
-          echo "store-dir=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - name: Cache pnpm
-        id: cache-pnpm
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        env:
-          cache-prefix: pnpm-cache
-          cache-platform: ${{ runner.os }}-${{ runner.arch }}
-          cache-hash: ${{ hashFiles('**/pnpm-lock.yaml') }}
-        with:
-          path: |
-            ${{ steps.get-store-dir.outputs.store-dir }}
-            **/node_modules
-          key: ${{ env.cache-prefix }}-${{ env.cache-platform }}-${{ env.cache-hash }}
-
-      - name: Install dependencies
-        if: ${{ steps.cache-pnpm.outputs.cache-hit != 'true' }}
-        run: |
-          pnpm install --frozen-lockfile
+      - name: Setup pnpm and install dependencies
+        uses: ./.github/actions/setup-pnpm
 
       - name: Cache typecheck
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3

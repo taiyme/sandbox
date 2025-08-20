@@ -3,37 +3,51 @@ name: CI
 on:
   push:
 
-  pull_request:
-
-  pull_request_target:
-
-# concurrency:
-#   group: >-
-#     ${{ github.workflow }}-
-#     ${{ github.event.pull_request.head.repo.full_name || github.repository }}-
-#     ${{ github.head_ref || github.run_id }}
-#   cancel-in-progress: true
+  workflow_dispatch:
 
 permissions: {}
 
 jobs:
-  ci:
+  checks:
+    name: Checks API
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      checks: read
     steps:
-      - env:
-          g_workflow: ${{ github.workflow }}
-          g_head_repo: ${{ github.event.pull_request.head.repo.full_name }}
-          g_repo: ${{ github.repository }}
-          g_head_ref: ${{ github.head_ref }}
-          g_run_id: ${{ github.run_id }}
-          concurrency_group: >-
-            ${{ github.workflow }}-
-            ${{ github.event.pull_request.head.repo.full_name || github.repository }}-
-            ${{ github.head_ref || github.run_id }}
-        run: |
-          echo "github.workflow: ${g_workflow}"
-          echo "github.head_repo: ${g_head_repo}"
-          echo "github.repo: ${g_repo}"
-          echo "github.head_ref: ${g_head_ref}"
-          echo "github.run_id: ${g_run_id}"
-          echo "concurrency.group: ${concurrency_group}"
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const checkRuns = await github.paginate(
+              github.rest.checks.listForRef,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.payload.pull_request?.head?.sha ?? context.sha,
+                per_page: 100,
+              },
+              (response) => response.data.check_runs,
+            );
+            console.log(JSON.stringify(checkRuns, null, '\t'));
+
+  statuses:
+    name: Statuses API
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      statuses: read
+    steps:
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const commitStatuses = await github.paginate(
+              github.rest.repos.listCommitStatusesForRef,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.payload.pull_request?.head?.sha ?? context.sha,
+                per_page: 100,
+              },
+              (response) => response.data,
+            );
+            console.log(JSON.stringify(commitStatuses, null, '\t'));

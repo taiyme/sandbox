@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+
+  pull_request:
+
+  pull_request_target:
+
+# concurrency:
+#   group: >-
+#     ${{ github.workflow }}-
+#     ${{ github.event.pull_request.head.repo.full_name || github.repository }}-
+#     ${{ github.head_ref || github.run_id }}
+#   cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  ci:
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          g_workflow: ${{ github.workflow }}
+          g_head_repo: ${{ github.event.pull_request.head.repo.full_name }}
+          g_repo: ${{ github.repository }}
+          g_head_ref: ${{ github.head_ref }}
+          g_run_id: ${{ github.run_id }}
+          concurrency_group: >-
+            ${{ github.workflow }}-
+            ${{ github.event.pull_request.head.repo.full_name || github.repository }}-
+            ${{ github.head_ref || github.run_id }}
+        run: |
+          echo "github.workflow: ${g_workflow}"
+          echo "github.head_repo: ${g_head_repo}"
+          echo "github.repo: ${g_repo}"
+          echo "github.head_ref: ${g_head_ref}"
+          echo "github.run_id: ${g_run_id}"
+          echo "concurrency.group: ${concurrency_group}"

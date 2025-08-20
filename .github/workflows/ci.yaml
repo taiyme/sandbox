@@ -3,6 +3,10 @@ name: CI
 on:
   push:
 
+  pull_request:
+
+  pull_request_target:
+
   workflow_dispatch:
 
 permissions: {}
@@ -18,16 +22,14 @@ jobs:
       - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const checkRuns = await github.paginate(
-              github.rest.checks.listForRef,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: context.payload.pull_request?.head?.sha ?? context.sha,
-                per_page: 100,
-              },
-              (response) => response.data.check_runs,
-            );
+            const checksParams = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.payload.pull_request?.head?.sha ?? context.sha,
+              per_page: 100,
+            };
+            console.log(JSON.stringify(checksParams, null, '\t'));
+            const { data: { check_runs: checkRuns } } = await github.rest.checks.listForRef(checksParams);
             console.log(JSON.stringify(checkRuns, null, '\t'));
 
   statuses:
@@ -40,14 +42,12 @@ jobs:
       - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const commitStatuses = await github.paginate(
-              github.rest.repos.listCommitStatusesForRef,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: context.payload.pull_request?.head?.sha ?? context.sha,
-                per_page: 100,
-              },
-              (response) => response.data,
-            );
+            const statusesParams = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.payload.pull_request?.head?.sha ?? context.sha,
+              per_page: 100,
+            };
+            console.log(JSON.stringify(statusesParams, null, '\t'));
+            const { data: commitStatuses } = await github.rest.repos.listCommitStatusesForRef(statusesParams);
             console.log(JSON.stringify(commitStatuses, null, '\t'));

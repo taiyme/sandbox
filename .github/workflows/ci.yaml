@@ -22,32 +22,49 @@ jobs:
       - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const checksParams = {
+            const { data: { check_runs: checkRuns } } = await github.rest.checks.listForRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: context.payload.pull_request?.head?.sha ?? context.sha,
               per_page: 100,
-            };
-            console.log(JSON.stringify(checksParams, null, '\t'));
-            const { data: { check_runs: checkRuns } } = await github.rest.checks.listForRef(checksParams);
-            console.log(JSON.stringify(checkRuns, null, '\t'));
+            });
+            const checks = checkRuns.map(({ id, name, status, conclusion }) => {
+              let bucket;
+              if (status === 'completed') {
+                switch (conclusion) {
+                  case 'success':
+                    bucket = 'pass';
+                    break;
+                  case 'skipped':
+                  case 'neutral':
+                    bucket = 'skipped';
+                    break;
+                  case 'cancelled':
+                    bucket = 'cancel';
+                    break;
+                  case 'failure':
+                  case 'timed_out':
+                  case 'action_required':
+                    bucket = 'fail';
+                    break;
+                }
+              }
+              bucket ??= 'pending';
+              return { id, name, bucket };
+            });
+            console.log(JSON.stringify(checks, null, '\t'));
 
-  statuses:
-    name: Statuses API
+  ci-1:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      statuses: read
     steps:
-      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        with:
-          script: |
-            const statusesParams = {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: context.payload.pull_request?.head?.sha ?? context.sha,
-              per_page: 100,
-            };
-            console.log(JSON.stringify(statusesParams, null, '\t'));
-            const { data: commitStatuses } = await github.rest.repos.listCommitStatusesForRef(statusesParams);
-            console.log(JSON.stringify(commitStatuses, null, '\t'));
+      - run: sleep 5
+
+  ci-2:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: sleep 10
+
+  ci-3:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: sleep 15

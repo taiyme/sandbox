@@ -1,3 +1,5 @@
-const name = 'iroha';
+const names = ['iroha', 'mito'];
 
-console.log(`Hello, ${name}!`);
+for (const name of names) {
+  console.log(`Hello, ${name}!`);
+}

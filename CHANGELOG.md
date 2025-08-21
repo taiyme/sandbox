@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/taiyme/sandbox/compare/v1.0.0...v1.0.1) (2025-08-21)
+
+
+### Bug Fixes
+
+* update main.ts ([001991d](https://github.com/taiyme/sandbox/commit/001991d62b5a20e7cc9bb5d35b4362052ce8e412))
+
 ## [1.0.0](https://github.com/taiyme/sandbox/compare/v0.0.2...v1.0.0) (2025-08-21)
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/taiyme/sandbox/compare/v1.1.0...v1.2.0) (2025-08-22)
+
+
+### Features
+
+* **ci:** labeler ([088ccb7](https://github.com/taiyme/sandbox/commit/088ccb7f9867c247bcb1c400da95df7648c84b39))
+
+
+### Bug Fixes
+
+* .github/workflows/lint-github-actions.yaml ([e632587](https://github.com/taiyme/sandbox/commit/e6325873d8a77a845d2da90869d76df49a359b71))
+
 ## [1.1.0](https://github.com/taiyme/sandbox/compare/v1.0.1...v1.1.0) (2025-08-21)
 
 

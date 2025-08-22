@@ -8,7 +8,7 @@ on:
       - .github/workflows/*.ya?ml
       - '**/action.ya?ml'
 
-  pull_request_target:
+  pull_request:
     branches:
       - main
     paths:
@@ -25,42 +25,17 @@ concurrency:
 permissions: {}
 
 jobs:
-  get-context-commit:
-    name: Get context commit
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    outputs:
-      sha: ${{ steps.pr.outputs.merge-commit-sha || github.sha }}
-    steps:
-      - name: Get merge commit
-        id: pr
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
-        env:
-          token: ${{ github.token }}
-          pr_number: ${{ github.event.pull_request.number }}
-        run: |
-          repo="https://x-access-token:${token}@github.com/${GITHUB_REPOSITORY}.git"
-          ref="refs/pull/${pr_number}/merge"
-          sha="$(git ls-remote "$repo" "$ref" | awk '{print $1}')"
-          [[ -z "$sha" ]] && exit 1
-          echo "merge-commit-sha=${sha}" >> "$GITHUB_OUTPUT"
-
   actionlint:
     name: actionlint
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
-    needs:
-      - get-context-commit
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-          ref: ${{ needs.get-context-commit.outputs.sha }}
           fetch-depth: 1
 
       - name: Lint with actionlint
@@ -72,14 +47,11 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    needs:
-      - get-context-commit
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-          ref: ${{ needs.get-context-commit.outputs.sha }}
           fetch-depth: 1
 
       - name: Lint with ghalint
@@ -91,8 +63,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    needs:
-      - get-context-commit
     strategy:
       fail-fast: false
       matrix:
@@ -105,7 +75,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-          ref: ${{ needs.get-context-commit.outputs.sha }}
           fetch-depth: 1
 
       - name: Lint with zizmor

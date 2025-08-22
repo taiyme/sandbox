@@ -1,0 +1,17 @@
+ci:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file:
+        - .github/workflows/**/*
+
+dev:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file:
+        - '**/*.config.*'
+
+docs:
+  - any:
+    - changed-files:
+      - any-glob-to-any-file:
+        - '**/*.md'

@@ -45,7 +45,7 @@ jobs:
           ref="refs/pull/${pr_number}/merge"
           sha="$(git ls-remote "$repo" "$ref" | awk '{print $1}')"
           [[ -z "$sha" ]] && exit 1
-          echo "merge-commit-sha=${sha}" >> $GITHUB_OUTPUT
+          echo "merge-commit-sha=${sha}" >> "$GITHUB_OUTPUT"
 
   actionlint:
     name: actionlint

@@ -63,13 +63,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        persona:
-          - regular
-          - pedantic
-          - auditor
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -81,4 +74,4 @@ jobs:
         uses: koki-develop/github-actions-lint/zizmor@62dfef5c9854a07712bad7af3bee7edb0c1109b1 # v1.4.1
         with:
           github-token: ${{ github.token }}
-          persona: ${{ matrix.persona }}
+          persona: auditor

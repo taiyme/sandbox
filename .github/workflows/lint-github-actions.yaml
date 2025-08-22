@@ -25,9 +25,9 @@ concurrency:
 permissions: {}
 
 jobs:
-  get-commit-sha:
-    name: Get Commit SHA
-    runs-on: ubuntu.24.04
+  get-context-commit:
+    name: Get context commit
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -54,13 +54,13 @@ jobs:
     permissions:
       contents: read
     needs:
-      - get-commit-sha
+      - get-context-commit
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-          ref: ${{ needs.get-commit-sha.outputs.sha }}
+          ref: ${{ needs.get-context-commit.outputs.sha }}
           fetch-depth: 1
 
       - name: Lint with actionlint
@@ -73,13 +73,13 @@ jobs:
     permissions:
       contents: read
     needs:
-      - get-commit-sha
+      - get-context-commit
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-          ref: ${{ needs.get-commit-sha.outputs.sha }}
+          ref: ${{ needs.get-context-commit.outputs.sha }}
           fetch-depth: 1
 
       - name: Lint with ghalint
@@ -92,7 +92,7 @@ jobs:
     permissions:
       contents: read
     needs:
-      - get-commit-sha
+      - get-context-commit
     strategy:
       fail-fast: false
       matrix:
@@ -105,7 +105,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
-          ref: ${{ needs.get-commit-sha.outputs.sha }}
+          ref: ${{ needs.get-context-commit.outputs.sha }}
           fetch-depth: 1
 
       - name: Lint with zizmor

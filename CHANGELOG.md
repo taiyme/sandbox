@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0](https://github.com/taiyme/sandbox/compare/v1.1.0...v1.2.0) (2025-08-29)
+
+
+### Features
+
+* **ci:** labeler ([088ccb7](https://github.com/taiyme/sandbox/commit/088ccb7f9867c247bcb1c400da95df7648c84b39))
+* mise task runner, autofix.ci ([fc2bb40](https://github.com/taiyme/sandbox/commit/fc2bb406531959fd0e8b430f4ce0b140f04fcc25))
+
+
+### Bug Fixes
+
+* .github/workflows/lint-github-actions.yaml ([e632587](https://github.com/taiyme/sandbox/commit/e6325873d8a77a845d2da90869d76df49a359b71))
+* .github/workflows/update-floating-tags.yaml ([b23537f](https://github.com/taiyme/sandbox/commit/b23537fc91f8c4cb81018bd45e261ecb17965c21))
+* add bugs ([3ad32ca](https://github.com/taiyme/sandbox/commit/3ad32caf787222a44468317aaa86c7a5faa537ad))
+* apply automated fixes ([ebb3745](https://github.com/taiyme/sandbox/commit/ebb3745a0b5a7de3c7d8f8f9e7c982098a58b25a))
+* remove idiomatic version file ([3576294](https://github.com/taiyme/sandbox/commit/3576294233a9d309bda3acccdaf3fed2c5665691))
+
 ## [1.1.0](https://github.com/taiyme/sandbox/compare/v1.0.1...v1.1.0) (2025-08-21)
 
 

@@ -1,0 +1,13 @@
+#:schema https://mise.jdx.dev/schema/mise-task.json
+
+[check]
+description = "Run all linters"
+depends = ["check:*"]
+
+["check:eslint"]
+description = "Run eslint"
+run = "pnpm exec eslint --fix"
+
+["check:tsc"]
+description = "Run tsc"
+run = "pnpm exec tsc --noEmit"

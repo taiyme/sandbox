@@ -1,6 +1,17 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+
+min_version = "2025.8.21"
+
 [tools]
 node = "22.14.0"
 "npm:pnpm" = "10.6.2"
 
 [settings]
 pin = true
+experimental = true
+
+[hooks]
+postinstall = "pnpm install --frozen-lockfile"
+
+[task_config]
+includes = ["tasks.toml"]

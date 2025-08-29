@@ -12,11 +12,6 @@
   "license": "MIT",
   "author": "taiy <me@taiy.me> (https://taiy.me/)",
   "type": "module",
-  "scripts": {
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
-    "ci:typecheck": "tsc --noEmit --incremental --tsBuildInfoFile .cache/tsbuildinfo"
-  },
   "devDependencies": {
     "@taiyme/eslint-config": "0.11.0",
     "@types/node": "22.17.0",
@@ -28,7 +23,6 @@
     "jiti": "2.5.1",
     "typescript": "5.8.3"
   },
-  "packageManager": "pnpm@10.14.0",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.6.0"

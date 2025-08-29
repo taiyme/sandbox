@@ -17,16 +17,16 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
-      new_version: ${{ github.event.release.tag_name }}
+      source_tag: ${{ github.event.release.tag_name }}
     outputs:
-      new-version: ${{ env.new_version }}
+      source-tag: ${{ env.source_tag }}
       floating-tags: ${{ steps.get-floating-tags.outputs.tags || '[]' }}
     steps:
       - name: Get floating tags
         id: get-floating-tags
         run: |
-          if [[ "$new_version" =~ ^v[1-9][0-9]*\.[0-9]+\.[0-9]+$ ]]; then
-            v_major_minor="${new_version%.*}"
+          if [[ "$source_tag" =~ ^v[1-9][0-9]*\.[0-9]+\.[0-9]+$ ]]; then
+            v_major_minor="${source_tag%.*}"
             v_major="${v_major_minor%.*}"
             tags=(
               "$v_major_minor"
@@ -35,7 +35,7 @@ jobs:
             tags_array="$(printf '%s\n' "${tags[@]}" | jq -R . | jq -sc .)"
             echo "tags=${tags_array}" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::Ignored version: ${new_version} (must be a stable release)"
+            echo "::notice::Ignored version: ${source_tag} (must be a stable release)"
             echo "tags=[]" >> "$GITHUB_OUTPUT"
           fi
 
@@ -51,7 +51,7 @@ jobs:
       matrix:
         floating-tag: ${{ fromJSON(needs.get-floating-tags.outputs.floating-tags) }}
     env:
-      new_version: ${{ needs.get-floating-tags.outputs.new-version }}
+      source_tag: ${{ needs.get-floating-tags.outputs.source-tag }}
       floating_tag: ${{ matrix.floating-tag }}
     steps:
       - name: Create GitHub App Token
@@ -77,7 +77,7 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
           persist-credentials: false
-          ref: ${{ env.new_version }}
+          ref: ${{ env.source_tag }}
           fetch-depth: 0
           fetch-tags: true
 
@@ -91,9 +91,7 @@ jobs:
           git config --global user.email "${app_user_id}+${app_slug}[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${app_token}@github.com/${GITHUB_REPOSITORY}"
 
-      - name: Move ${{ env.floating_tag }} to ${{ env.new_version }}
+      - name: Sync ${{ env.floating_tag }} tag to ${{ env.source_tag }}
         run: |
-          git tag -d "$floating_tag" || true
-          git push origin ":refs/tags/${floating_tag}" || true
-          git tag "$floating_tag" "$new_version"
-          git push origin "$floating_tag"
+          git tag --force "$floating_tag" "refs/tags/${source_tag}"
+          git push --force origin "refs/tags/${floating_tag}"

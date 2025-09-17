@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0](https://github.com/taiyme/sandbox/compare/v1.2.0...v1.3.0) (2025-09-17)
+
+
+### Features
+
+* add monorepo ([f3cb3fa](https://github.com/taiyme/sandbox/commit/f3cb3fa21674ffe7b70b34b4a24133a9bb8b4600))
+
+
+### Bug Fixes
+
+* update files ([7dff135](https://github.com/taiyme/sandbox/commit/7dff13554880fa1731cf67ce7099a10739e5038c))
+* update lockfile ([148c600](https://github.com/taiyme/sandbox/commit/148c600318effab90d23716838c0113ba7076929))
+* update package.json ([90a61cc](https://github.com/taiyme/sandbox/commit/90a61cc0660a994e2300eccadf5e742ed46feed2))
+* update release-please-config ([b2145a3](https://github.com/taiyme/sandbox/commit/b2145a370af46fa193102e3c9e9e368c9078ad31))
+
 ## [1.2.0](https://github.com/taiyme/sandbox/compare/v1.1.0...v1.2.0) (2025-08-29)
 
 

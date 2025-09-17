@@ -1,5 +1,5 @@
 {
-  "name": "@taiyme/internal-e",
+  "name": "@taiyme/sandbox-e",
   "version": "1.2.0",
   "private": true,
   "type": "module"

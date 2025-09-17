@@ -6,30 +6,12 @@
   "include-v-in-tag": true,
   "packages": {
     ".": {
+      "component": "root",
       "extra-files": [
         {
           "type": "json",
-          "path": "packages/a/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/b/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/c/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/d/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/e/package.json",
+          "path": "packages/*/package.json",
+          "glob": true,
           "jsonpath": "$.version"
         }
       ]

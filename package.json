@@ -1,5 +1,6 @@
 {
-  "name": "@taiyme/internal-monorepo",
+  "name": "@taiyme/sandbox-monorepo",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "devDependencies": {

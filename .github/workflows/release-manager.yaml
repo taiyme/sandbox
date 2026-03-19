@@ -92,13 +92,59 @@ jobs:
             exit 1
           fi
 
+  bump-version:
+    name: Bump version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs:
+      - parse-version
+    permissions:
+      contents: read
+    env:
+      parsed_version: ${{ needs.parse-version.outputs.parsed-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: true
+
+      - name: Update package.json (root)
+        run: |
+          jq --arg v "$parsed_version" -- '.version = $v' package.json > tmp
+          mv tmp package.json
+          cat package.json
+
+      # - name: Update package.json (misskey-js)
+      #   working-directory: packages/misskey-js
+      #   run: |
+      #     jq --arg v "$parsed_version" -- '.version = $v' package.json > tmp
+      #     mv tmp package.json
+      #     cat package.json
+
+      # - name: Update compose_example.yml
+      #   run: |
+      #     old_docker_image="$(yq '.services.web.image' compose_example.yml)"
+      #     new_docker_image='${{ vars.DOCKER_IMAGE_NAME }}:${{ needs.parse-version.outputs.new_version }}'
+      #     sed -i "s|image: ${old_docker_image}|image: ${new_docker_image}|g" compose_example.yml
+
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      #   with:
+      #     name: bump_version_files
+      #     path: |
+      #       package.json
+      #       packages/misskey-js/package.json
+      #       compose_example.yml
+
   log:
     name: Log
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    permissions: {}
     needs:
       - parse-version
+    permissions: {}
     steps:
       - name: Log
         env:

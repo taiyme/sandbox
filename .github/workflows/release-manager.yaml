@@ -1,0 +1,111 @@
+name: Release Manager
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  release_suffix_name: taiyme
+
+jobs:
+  parse-version:
+    name: Parse version
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    if: "${{ ! startsWith(github.event.head_commit.message, 'chore(release): bump to v') }}"
+    outputs:
+      upstream-version: ${{ steps.get-upstream.outputs.base-version }}
+      current-version: ${{ steps.get-current.outputs.full-version }}
+      parsed-version: ${{ steps.result.outputs.parsed-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: true
+
+      - name: Get upstream version
+        id: get-upstream
+        run: |
+          v="$(jq -r '.upstreamVersion // empty' package.json)"
+
+          if [[ -z "$v" ]]; then
+            echo "::error::Missing required field 'upstreamVersion'"
+            exit 1
+          fi
+
+          echo "base-version=${v%%-*}" >> "$GITHUB_OUTPUT"
+
+      - name: Get current version
+        id: get-current
+        run: |
+          v="$(jq -r '.version // empty' package.json)"
+
+          if [[ -z "$v" ]]; then
+            echo "::error::Missing required field 'version'"
+            exit 1
+          fi
+
+          if [[ "$v" == *-"$release_suffix_name".* ]]; then
+            base_version="${v%-${release_suffix_name}.*}"
+            count="${v##*-${release_suffix_name}.}"
+          else
+            base_version="$v"
+            count=""
+          fi
+
+          echo "full-version=${v}" >> "$GITHUB_OUTPUT"
+          echo "base-version=${base_version}" >> "$GITHUB_OUTPUT"
+          echo "count=${count}" >> "$GITHUB_OUTPUT"
+
+      - name: Parse version
+        id: result
+        env:
+          upstream_version: ${{ steps.get-upstream.outputs.base-version }}
+          current_version: ${{ steps.get-current.outputs.base-version }}
+          current_count: ${{ steps.get-current.outputs.count }}
+        run: |
+          if [[ "$current_version" == "$upstream_version" ]]; then
+            if [[ -z "$current_count" ]]; then
+              parsed_version="${current_version}-${release_suffix_name}.0"
+            else
+              parsed_version="${current_version}-${release_suffix_name}.$((current_count + 1))"
+            fi
+          else
+            parsed_version="${upstream_version}-${release_suffix_name}.0"
+          fi
+
+          if [[ "$parsed_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-${release_suffix_name}\.[0-9]+$ ]]; then
+            echo "parsed-version=${parsed_version}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Incorrect version format: '${parsed_version}'"
+            exit 1
+          fi
+
+  log:
+    name: Log
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions: {}
+    needs:
+      - parse-version
+    steps:
+      - name: Log
+        env:
+          upstream_version: ${{ needs.parse-version.outputs.upstream-version }}
+          current_version: ${{ needs.parse-version.outputs.current-version }}
+          parsed_version: ${{ needs.parse-version.outputs.parsed-version }}
+        run: |
+          echo "upstream_version: ${upstream_version}"
+          echo "current_version: ${current_version}"
+          echo "parsed_version: ${parsed_version}"

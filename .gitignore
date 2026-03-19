@@ -11,3 +11,5 @@ pnpm-debug.log*
 
 # cache
 .cache/
+
+test.sh

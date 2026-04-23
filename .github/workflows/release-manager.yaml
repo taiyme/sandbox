@@ -6,102 +6,77 @@ on:
       - main
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions: {}
 
 env:
-  release_suffix_name: taiyme
+  version_fork_id: taiyme
+  release_branch: release-pr--branches--${{ github.ref_name }}
+  release_label_pending: 'autorelease: pending'
+  release_label_tagged: 'autorelease: tagged'
 
 jobs:
-  parse-version:
-    name: Parse version
+  find-pr:
+    name: Find Release PR
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      contents: read
-    if: "${{ ! startsWith(github.event.head_commit.message, 'chore(release): bump to v') }}"
+      pull-requests: read # Required for 'Find Release PR' step.
     outputs:
-      upstream-version: ${{ steps.get-upstream.outputs.base-version }}
-      current-version: ${{ steps.get-current.outputs.full-version }}
-      parsed-version: ${{ steps.result.outputs.parsed-version }}
+      pr-number: ${{ steps.find-pr.outputs.pr-number }}
+      pr-state: ${{ steps.find-pr.outputs.pr-state }}
+      merge-commit-sha: ${{ steps.find-pr.outputs.merge-commit-sha }}
+      operation-type: ${{ steps.find-pr.outputs.operation-type }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-          fetch-depth: 1
-          submodules: true
-
-      - name: Get upstream version
-        id: get-upstream
-        run: |
-          v="$(jq -r '.upstreamVersion // empty' package.json)"
-
-          if [[ -z "$v" ]]; then
-            echo "::error::Missing required field 'upstreamVersion'"
-            exit 1
-          fi
-
-          echo "base-version=${v%%-*}" >> "$GITHUB_OUTPUT"
-
-      - name: Get current version
-        id: get-current
-        run: |
-          v="$(jq -r '.version // empty' package.json)"
-
-          if [[ -z "$v" ]]; then
-            echo "::error::Missing required field 'version'"
-            exit 1
-          fi
-
-          if [[ "$v" == *-"$release_suffix_name".* ]]; then
-            base_version="${v%-${release_suffix_name}.*}"
-            count="${v##*-${release_suffix_name}.}"
-          else
-            base_version="$v"
-            count=""
-          fi
-
-          echo "full-version=${v}" >> "$GITHUB_OUTPUT"
-          echo "base-version=${base_version}" >> "$GITHUB_OUTPUT"
-          echo "count=${count}" >> "$GITHUB_OUTPUT"
-
-      - name: Parse version
-        id: result
+      - name: Find Release PR
+        id: find-pr
         env:
-          upstream_version: ${{ steps.get-upstream.outputs.base-version }}
-          current_version: ${{ steps.get-current.outputs.base-version }}
-          current_count: ${{ steps.get-current.outputs.count }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          head_ref: ${{ env.release_branch }}
         run: |
-          if [[ "$current_version" == "$upstream_version" ]]; then
-            if [[ -z "$current_count" ]]; then
-              parsed_version="${current_version}-${release_suffix_name}.0"
-            else
-              parsed_version="${current_version}-${release_suffix_name}.$((current_count + 1))"
-            fi
-          else
-            parsed_version="${upstream_version}-${release_suffix_name}.0"
-          fi
+          IFS=$'\t' read -r pr_number pr_state merge_commit_sha < <(
+            gh pr list \
+              --head "$head_ref" \
+              --label "$release_label_pending" \
+              --state all \
+              --limit 1 \
+              --json number,state,mergeCommit \
+              --jq '
+                .[0] |
+                [.number // "-", (.state // "-" | ascii_downcase), (.mergeCommit.oid // "-")] |
+                @tsv
+              '
+          )
 
-          if [[ "$parsed_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-${release_suffix_name}\.[0-9]+$ ]]; then
-            echo "parsed-version=${parsed_version}" >> "$GITHUB_OUTPUT"
-          else
-            echo "::error::Incorrect version format: '${parsed_version}'"
-            exit 1
-          fi
+          echo "pr-number=${pr_number}" >> "$GITHUB_OUTPUT"
+          echo "pr-state=${pr_state}" >> "$GITHUB_OUTPUT"
+          echo "merge-commit-sha=${merge_commit_sha}" >> "$GITHUB_OUTPUT"
 
-  bump-version:
-    name: Bump version
+          case "$pr_state" in
+            merged)
+              echo "operation-type=create_release" >> "$GITHUB_OUTPUT"
+              ;;
+            open)
+              echo "operation-type=update_pr" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "operation-type=create_pr" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+  parse-version:
+    name: Parse Version
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    needs:
-      - parse-version
     permissions:
       contents: read
-    env:
-      parsed_version: ${{ needs.parse-version.outputs.parsed-version }}
+    outputs:
+      upstream-version: ${{ steps.parse-version.outputs.upstream-version }}
+      current-version: ${{ steps.parse-version.outputs.current-version }}
+      next-version: ${{ steps.parse-version.outputs.next-version }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -110,48 +85,157 @@ jobs:
           fetch-depth: 1
           submodules: true
 
-      - name: Update package.json (root)
+      - name: Parse Version
+        id: parse-version
         run: |
-          jq --arg v "$parsed_version" -- '.version = $v' package.json > tmp
-          mv tmp package.json
-          cat package.json
+          upstream_version="$(jq -er '.upstreamVersion' package.json)"
+          current_version="$(jq -er '.version' package.json)"
 
-      # - name: Update package.json (misskey-js)
-      #   working-directory: packages/misskey-js
-      #   run: |
-      #     jq --arg v "$parsed_version" -- '.version = $v' package.json > tmp
-      #     mv tmp package.json
-      #     cat package.json
+          if [[ "$current_version" == *-"$version_fork_id".* ]]; then
+            current_version_base="${current_version%-${version_fork_id}.*}"
+            current_version_count="${current_version##*-${version_fork_id}.}"
+          else
+            current_version_base="$current_version"
+            current_version_count=""
+          fi
 
-      # - name: Update compose_example.yml
-      #   run: |
-      #     old_docker_image="$(yq '.services.web.image' compose_example.yml)"
-      #     new_docker_image='${{ vars.DOCKER_IMAGE_NAME }}:${{ needs.parse-version.outputs.new_version }}'
-      #     sed -i "s|image: ${old_docker_image}|image: ${new_docker_image}|g" compose_example.yml
+          if [[ -z "$current_version_count" || "$upstream_version" != "$current_version_base" ]]; then
+            next_version_base="$upstream_version"
+            next_version_count="0"
+          else
+            next_version_base="$current_version_base"
+            next_version_count="$((current_version_count + 1))"
+          fi
 
-      # - name: Upload artifacts
-      #   uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-      #   with:
-      #     name: bump_version_files
-      #     path: |
-      #       package.json
-      #       packages/misskey-js/package.json
-      #       compose_example.yml
+          next_version="${next_version_base}-${version_fork_id}.${next_version_count}"
+          echo "next-version=${next_version}" >> "$GITHUB_OUTPUT"
 
-  log:
-    name: Log
+          echo "upstream-version=${upstream_version}" >> "$GITHUB_OUTPUT"
+          echo "current-version=${current_version}" >> "$GITHUB_OUTPUT"
+
+  update-branch:
+    name: Update branch
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     needs:
+      - find-pr
       - parse-version
     permissions: {}
+    environment: production
+    if: ${{ needs.find-pr.outputs.operation-type == 'update_pr' || needs.find-pr.outputs.operation-type == 'create_pr' }}
+    env:
+      desired_version: ${{ needs.parse-version.outputs.next-version }}
     steps:
-      - name: Log
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: app-token
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-metadata: read
+          permission-contents: write
+
+      - name: Setup Git
+        id: setup-git
         env:
-          upstream_version: ${{ needs.parse-version.outputs.upstream-version }}
-          current_version: ${{ needs.parse-version.outputs.current-version }}
-          parsed_version: ${{ needs.parse-version.outputs.parsed-version }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          app_name: '${{ steps.app-token.outputs.app-slug }}[bot]'
         run: |
-          echo "upstream_version: ${upstream_version}"
-          echo "current_version: ${current_version}"
-          echo "parsed_version: ${parsed_version}"
+          app_user_id="$(gh api "/users/${app_name}" --jq '.id')"
+          app_email="${app_user_id}+${app_name}@users.noreply.github.com"
+          echo "name=${app_name}" >> "$GITHUB_OUTPUT"
+          echo "email=${app_email}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+          fetch-depth: 0
+          submodules: true
+
+      - name: Configure Git
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          app_name: ${{ steps.setup-git.outputs.name }}
+          app_email: ${{ steps.setup-git.outputs.email }}
+        run: |
+          git config --global user.name "$app_name"
+          git config --global user.email "$app_email"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}"
+
+      - name: Create branch
+        run: |
+          git switch --force-create "$release_branch" HEAD
+
+      - name: Update package.json
+        run: |
+          jq --tab \
+            --arg desired_version "$desired_version" \
+            -- '.version = $desired_version' \
+            package.json \
+            > tmp.json
+          mv tmp.json package.json
+
+      - name: Update taiyme.env
+        run: |
+          cat <<EOF > taiyme.env
+          # This file is generated by the release workflow.
+          # Do not edit this file directly.
+
+          TAIYME_VERSION=${desired_version}
+          EOF
+
+      - name: Commit and Push
+        run: |
+          git commit -am "chore(release): bump to v${desired_version}"
+          git push origin "$release_branch" --force
+
+  update-pr:
+    name: Update PR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs:
+      - find-pr
+      - parse-version
+      - update-branch
+    permissions: {}
+    environment: production
+    if: ${{ needs.find-pr.outputs.operation-type == 'update_pr' || needs.find-pr.outputs.operation-type == 'create_pr' }}
+    env:
+      desired_version: ${{ needs.parse-version.outputs.next-version }}
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: app-token
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-metadata: read
+          permission-pull-requests: write
+
+      - name: Create PR
+        if: ${{ needs.find-pr.outputs.operation-type == 'create_pr' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          head_ref: ${{ env.release_branch }}
+          base_ref: ${{ github.ref_name }}
+        run: |
+          gh pr create \
+            --head "$head_ref" \
+            --base "$base_ref" \
+            --title "chore(release): bump to v${desired_version}" \
+            --body "" \
+            --label "$release_label_pending"
+
+      - name: Update PR
+        if: ${{ needs.find-pr.outputs.operation-type == 'update_pr' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          pr_number: ${{ needs.find-pr.outputs.pr-number }}
+        run: |
+          gh pr edit "$pr_number" \
+            --title "chore(release): bump to v${desired_version}"

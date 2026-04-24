@@ -25,11 +25,11 @@ jobs:
     permissions:
       pull-requests: read # Required for 'Find Release PR' step.
     outputs:
+      operation-type: ${{ steps.find-pr.outputs.operation-type }}
       pr-number: ${{ steps.find-pr.outputs.pr-number }}
       pr-state: ${{ steps.find-pr.outputs.pr-state }}
       pr-body: ${{ steps.find-pr.outputs.pr-body }}
       merge-commit-sha: ${{ steps.find-pr.outputs.merge-commit-sha }}
-      operation-type: ${{ steps.find-pr.outputs.operation-type }}
     steps:
       - name: Find Release PR
         id: find-pr
@@ -61,27 +61,28 @@ jobs:
           pr_body="$(jq -cr '.pr_body' <<< "$pr_json")"
           merge_commit_sha="$(jq -cr '.merge_commit_sha' <<< "$pr_json")"
 
-          echo "pr-number=${pr_number}" >> "$GITHUB_OUTPUT"
-          echo "pr-state=${pr_state}" >> "$GITHUB_OUTPUT"
-          echo "merge-commit-sha=${merge_commit_sha}" >> "$GITHUB_OUTPUT"
+          case "$pr_state" in
+            merged)
+              operation_type="create_release"
+              ;;
+            open)
+              operation_type="update_pr"
+              ;;
+            *)
+              operation_type="create_pr"
+              ;;
+          esac
+
           _pr_body_delimiter="$(openssl rand -hex 8)"
           {
+            echo "operation-type=${operation_type}"
+            echo "pr-number=${pr_number}"
+            echo "pr-state=${pr_state}"
+            echo "merge-commit-sha=${merge_commit_sha}"
             echo "pr-body<<${_pr_body_delimiter}"
             printf "%s\n" "$pr_body"
             echo "$_pr_body_delimiter"
           } >> "$GITHUB_OUTPUT"
-
-          case "$pr_state" in
-            merged)
-              echo "operation-type=create_release" >> "$GITHUB_OUTPUT"
-              ;;
-            open)
-              echo "operation-type=update_pr" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "operation-type=create_pr" >> "$GITHUB_OUTPUT"
-              ;;
-          esac
 
   parse-version:
     name: Parse version
@@ -106,8 +107,8 @@ jobs:
           current_version="$(jq -er '.version' package.json)"
 
           if [[ "$current_version" == *-"$version_fork_id".* ]]; then
-            current_version_base="${current_version%-${version_fork_id}.*}"
-            current_version_count="${current_version##*-${version_fork_id}.}"
+            current_version_base="${current_version%-"$version_fork_id".*}"
+            current_version_count="${current_version##*-"$version_fork_id".}"
           else
             current_version_base="$current_version"
             current_version_count=""

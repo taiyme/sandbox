@@ -226,6 +226,7 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           permission-metadata: read
           permission-pull-requests: write
+          permission-issues: write # Required for PR labels
 
       - name: Create PR
         if: ${{ needs.find-pr.outputs.operation-type == 'create_pr' }}
@@ -270,6 +271,8 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           permission-metadata: read
           permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write # Required for PR labels
 
       - name: Setup Git
         id: setup-git
@@ -329,3 +332,13 @@ jobs:
               --notes-file - \
               --verify-tag \
               --fail-on-no-commits
+
+      - name: Update label to tagged
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          pr_number: ${{ needs.find-pr.outputs.pr-number }}
+        run: |
+          gh pr edit "$pr_number" \
+            --remove-label "$release_label_pending" \
+            --add-label "$release_label_tagged"

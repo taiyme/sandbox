@@ -7,13 +7,13 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions: {}
 
 env:
   version_fork_id: taiyme
-  release_branch: release-pr--branches--${{ github.ref_name }}
+  release_branch: release-manager--branches--${{ github.ref_name }}
   release_label_pending: 'autorelease: pending'
   release_label_tagged: 'autorelease: tagged'
 
@@ -27,6 +27,7 @@ jobs:
     outputs:
       pr-number: ${{ steps.find-pr.outputs.pr-number }}
       pr-state: ${{ steps.find-pr.outputs.pr-state }}
+      pr-body: ${{ steps.find-pr.outputs.pr-body }}
       merge-commit-sha: ${{ steps.find-pr.outputs.merge-commit-sha }}
       operation-type: ${{ steps.find-pr.outputs.operation-type }}
     steps:
@@ -37,23 +38,38 @@ jobs:
           GH_REPO: ${{ github.repository }}
           head_ref: ${{ env.release_branch }}
         run: |
-          IFS=$'\t' read -r pr_number pr_state merge_commit_sha < <(
+          pr_json="$( \
             gh pr list \
               --head "$head_ref" \
               --label "$release_label_pending" \
               --state all \
               --limit 1 \
-              --json number,state,mergeCommit \
+              --json number,state,mergeCommit,body \
               --jq '
                 .[0] |
-                [.number // "-", (.state // "-" | ascii_downcase), (.mergeCommit.oid // "-")] |
-                @tsv
-              '
-          )
+                {
+                  pr_number: .number // "",
+                  pr_state: .state // "" | ascii_downcase,
+                  pr_body: .body // "",
+                  merge_commit_sha: .mergeCommit.oid // "",
+                }
+              ' \
+          )"
+
+          pr_number="$(jq -cr '.pr_number' <<< "$pr_json")"
+          pr_state="$(jq -cr '.pr_state' <<< "$pr_json")"
+          pr_body="$(jq -cr '.pr_body' <<< "$pr_json")"
+          merge_commit_sha="$(jq -cr '.merge_commit_sha' <<< "$pr_json")"
 
           echo "pr-number=${pr_number}" >> "$GITHUB_OUTPUT"
           echo "pr-state=${pr_state}" >> "$GITHUB_OUTPUT"
           echo "merge-commit-sha=${merge_commit_sha}" >> "$GITHUB_OUTPUT"
+          _pr_body_delimiter="$(openssl rand -hex 8)"
+          {
+            echo "pr-body<<${_pr_body_delimiter}"
+            printf "%s\n" "$pr_body"
+            echo "$_pr_body_delimiter"
+          } >> "$GITHUB_OUTPUT"
 
           case "$pr_state" in
             merged)
@@ -68,14 +84,12 @@ jobs:
           esac
 
   parse-version:
-    name: Parse Version
+    name: Parse version
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
     outputs:
-      upstream-version: ${{ steps.parse-version.outputs.upstream-version }}
-      current-version: ${{ steps.parse-version.outputs.current-version }}
       next-version: ${{ steps.parse-version.outputs.next-version }}
     steps:
       - name: Checkout
@@ -85,7 +99,7 @@ jobs:
           fetch-depth: 1
           submodules: true
 
-      - name: Parse Version
+      - name: Parse version
         id: parse-version
         run: |
           upstream_version="$(jq -er '.upstreamVersion' package.json)"
@@ -109,9 +123,6 @@ jobs:
 
           next_version="${next_version_base}-${version_fork_id}.${next_version_count}"
           echo "next-version=${next_version}" >> "$GITHUB_OUTPUT"
-
-          echo "upstream-version=${upstream_version}" >> "$GITHUB_OUTPUT"
-          echo "current-version=${current_version}" >> "$GITHUB_OUTPUT"
 
   update-branch:
     name: Update branch
@@ -239,3 +250,81 @@ jobs:
         run: |
           gh pr edit "$pr_number" \
             --title "chore(release): bump to v${desired_version}"
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs:
+      - find-pr
+    permissions: {}
+    environment: production
+    if: ${{ needs.find-pr.outputs.operation-type == 'create_release' }}
+    steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        id: app-token
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-metadata: read
+          permission-contents: write
+
+      - name: Setup Git
+        id: setup-git
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          app_name: '${{ steps.app-token.outputs.app-slug }}[bot]'
+        run: |
+          app_user_id="$(gh api "/users/${app_name}" --jq '.id')"
+          app_email="${app_user_id}+${app_name}@users.noreply.github.com"
+          echo "name=${app_name}" >> "$GITHUB_OUTPUT"
+          echo "email=${app_email}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+          fetch-depth: 0
+          submodules: true
+          ref: ${{ needs.find-pr.outputs.merge-commit-sha }}
+
+      - name: Configure Git
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          app_name: ${{ steps.setup-git.outputs.name }}
+          app_email: ${{ steps.setup-git.outputs.email }}
+        run: |
+          git config --global user.name "$app_name"
+          git config --global user.email "$app_email"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}"
+
+      # NOTE: 'v' プレフィックスは付けない (misskey-dev/misskey と同じ形式にするため)
+      - name: Get desired tag
+        id: get-tag
+        run: |
+          desired_tag="$(jq -er '.version' package.json)"
+          echo "desired-tag=${desired_tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Tagging and Push
+        env:
+          desired_tag: ${{ steps.get-tag.outputs.desired-tag }}
+        run: |
+          git tag "$desired_tag" -m ""
+          git push origin "$desired_tag"
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          desired_tag: ${{ steps.get-tag.outputs.desired-tag }}
+          pr_body: ${{ needs.find-pr.outputs.pr-body }}
+        run: |
+          printf "%s" "$pr_body" | \
+            gh release create "$desired_tag" \
+              --title "$desired_tag" \
+              --notes-file - \
+              --verify-tag \
+              --fail-on-no-commits

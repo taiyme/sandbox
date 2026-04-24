@@ -312,12 +312,12 @@ jobs:
           desired_tag="$(jq -er '.version' package.json)"
           echo "desired-tag=${desired_tag}" >> "$GITHUB_OUTPUT"
 
-      - name: Tagging and Push
-        env:
-          desired_tag: ${{ steps.get-tag.outputs.desired-tag }}
-        run: |
-          git tag "$desired_tag" -m ""
-          git push origin "$desired_tag"
+      # - name: Tagging and Push
+      #   env:
+      #     desired_tag: ${{ steps.get-tag.outputs.desired-tag }}
+      #   run: |
+      #     git tag "$desired_tag" -m ""
+      #     git push origin "$desired_tag"
 
       - name: Create Release
         env:
@@ -325,12 +325,13 @@ jobs:
           GH_REPO: ${{ github.repository }}
           desired_tag: ${{ steps.get-tag.outputs.desired-tag }}
           pr_body: ${{ needs.find-pr.outputs.pr-body }}
+          merge_commit_sha: ${{ needs.find-pr.outputs.merge-commit-sha }}
         run: |
           printf "%s" "$pr_body" | \
             gh release create "$desired_tag" \
               --title "$desired_tag" \
               --notes-file - \
-              --verify-tag \
+              --target "$merge_commit_sha" \
               --fail-on-no-commits
 
       - name: Update label to tagged

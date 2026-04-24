@@ -1,6 +1,6 @@
 {
 	"name": "@taiyme/sandbox",
-	"version": "2024.9999.9999",
+	"version": "2026.4.0-beta.0-taiyme.0",
 	"upstreamVersion": "2026.4.0-beta.0",
 	"type": "module"
 }
